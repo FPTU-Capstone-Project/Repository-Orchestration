@@ -74,7 +74,34 @@ auto_install_deps() {
     fi
 }
 
-# Check if port is available
+# Force kill processes on specific port
+force_kill_port() {
+    local port=$1
+    local service=$2
+    
+    if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
+        warning "Port $port is in use, stopping conflicting process for $service..."
+        local pids=$(lsof -Pi :$port -sTCP:LISTEN -t)
+        for pid in $pids; do
+            log "Killing process $pid on port $port"
+            kill -9 $pid 2>/dev/null || true
+        done
+        sleep 2
+        
+        # Double-check if port is now free
+        if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
+            error "Failed to free port $port completely"
+            return 1
+        else
+            success "Port $port is now available for $service"
+        fi
+    else
+        success "Port $port is available for $service"
+    fi
+    return 0
+}
+
+# Check if port is available (legacy function for compatibility)
 check_port() {
     local port=$1
     local service=$2
@@ -160,22 +187,44 @@ check_system_requirements() {
         success "Docker is running and available"
     fi
     
-    # Check available ports
+    # Check available ports (with auto-cleanup option)
     if ! check_port $BE_PORT "Backend"; then
-        requirements_met=false
+        if [ "${AUTO_KILL_PORTS:-true}" = "true" ]; then
+            log "Auto-cleanup enabled. Attempting to free port $BE_PORT..."
+            force_kill_port $BE_PORT "Backend"
+        else
+            requirements_met=false
+        fi
     fi
     
     if ! check_port $FE_PORT "Frontend"; then
-        requirements_met=false
+        if [ "${AUTO_KILL_PORTS:-true}" = "true" ]; then
+            log "Auto-cleanup enabled. Attempting to free port $FE_PORT..."
+            force_kill_port $FE_PORT "Frontend"
+        else
+            requirements_met=false
+        fi
     fi
     
     # Check disk space (minimum 2GB)
-    available_space=$(df -h . | awk 'NR==2 {print $4}' | sed 's/G//')
-    if (( $(echo "$available_space < 2" | bc -l) )); then
+    available_space=$(df -h . | awk 'NR==2 {print $4}')
+    # Extract numeric value and convert to GB if needed
+    space_num=$(echo "$available_space" | sed 's/[^0-9.]//g')
+    space_unit=$(echo "$available_space" | sed 's/[0-9.]//g')
+    
+    # Convert to GB for comparison
+    case $space_unit in
+        "Ti"|"T") space_gb=$(echo "$space_num * 1024" | bc 2>/dev/null || echo "2048") ;;
+        "Gi"|"G") space_gb=$(echo "$space_num" | bc 2>/dev/null || echo "$space_num") ;;
+        "Mi"|"M") space_gb=$(echo "$space_num / 1024" | bc -l 2>/dev/null || echo "0.1") ;;
+        *) space_gb="2" ;; # Default to 2GB if we can't parse
+    esac
+    
+    if command -v bc >/dev/null 2>&1 && (( $(echo "$space_gb < 2" | bc -l 2>/dev/null || echo "0") )); then
         error "Insufficient disk space. At least 2GB required."
         requirements_met=false
     else
-        success "Sufficient disk space available: ${available_space}G"
+        success "Sufficient disk space available: ${available_space}"
     fi
     
     if [ "$requirements_met" = false ]; then
@@ -352,6 +401,37 @@ stop_services() {
     success "All services stopped"
 }
 
+# Comprehensive stop-all function (including common development ports)
+stop_all_services() {
+    log "Stopping ALL development services and clearing ports..."
+    
+    # Common development ports
+    local common_ports=(3000 3001 5000 5173 8000 8080 8081 9000 9001 4000 4200)
+    
+    for port in "${common_ports[@]}"; do
+        if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
+            log "Stopping service on port $port..."
+            kill -9 $(lsof -Pi :$port -sTCP:LISTEN -t) 2>/dev/null || true
+        fi
+    done
+    
+    # Kill common development processes
+    pkill -f "npm" 2>/dev/null || true
+    pkill -f "node" 2>/dev/null || true
+    pkill -f "mvn" 2>/dev/null || true
+    pkill -f "gradle" 2>/dev/null || true
+    pkill -f "python -m http.server" 2>/dev/null || true
+    pkill -f "serve" 2>/dev/null || true
+    pkill -f "vite" 2>/dev/null || true
+    pkill -f "webpack" 2>/dev/null || true
+    
+    # Wait a moment for processes to terminate
+    sleep 2
+    
+    success "All development services and ports cleared"
+    log "Safe to start fresh development environment"
+}
+
 # Status check
 check_status() {
     echo "Service Status:"
@@ -402,11 +482,19 @@ case "${1:-start}" in
     "stop")
         stop_services
         ;;
+    "stop-all"|"clean")
+        stop_all_services
+        ;;
     "status")
         check_status
         ;;
     "restart")
         stop_services
+        sleep 3
+        start_orchestration
+        ;;
+    "clean-restart")
+        stop_all_services
         sleep 3
         start_orchestration
         ;;
@@ -441,13 +529,19 @@ case "${1:-start}" in
         echo "Usage: $0 [command]"
         echo ""
         echo "Commands:"
-        echo "  start     - Start all services (default)"
-        echo "  stop      - Stop all services"
-        echo "  restart   - Restart all services"
-        echo "  status    - Check service status"
-        echo "  dashboard - Open web dashboard"
-        echo "  logs      - View logs [backend|frontend|all]"
-        echo "  help      - Show this help message"
+        echo "  start         - Start all services (default, auto-clears conflicting ports)"
+        echo "  stop          - Stop project services only"
+        echo "  stop-all      - Stop ALL development services and clear common ports"
+        echo "  clean         - Alias for stop-all"
+        echo "  restart       - Restart project services"
+        echo "  clean-restart - Stop all services, then start fresh"
+        echo "  status        - Check service status"
+        echo "  dashboard     - Open web dashboard"
+        echo "  logs          - View logs [backend|frontend|all]"
+        echo "  help          - Show this help message"
+        echo ""
+        echo "Environment Variables:"
+        echo "  AUTO_KILL_PORTS=false - Disable automatic port cleanup (default: true)"
         ;;
     *)
         error "Unknown command: $1"
