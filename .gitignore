@@ -1,0 +1,108 @@
+# Orchestration Repository - .gitignore
+
+# ============================================
+# IMPORTANT: Exclude cloned repositories
+# ============================================
+# Don't commit the actual BE/FE repositories
+backend/
+frontend/
+backend-capstone/
+frontend-web-capstone/
+
+# ============================================
+# Claude Code Configuration
+# ============================================
+.claude/
+.claude-config.json
+
+# ============================================
+# Environment and Configuration
+# ============================================
+.env
+.env.local
+.env.production
+.env.staging
+config/local.yml
+config/*.local.*
+
+# ============================================
+# Logs Directory
+# ============================================
+logs/
+*.log
+
+# ============================================
+# Runtime Files
+# ============================================
+# Process IDs
+*.pid
+pids/
+
+# Temporary directories
+tmp/
+temp/
+
+# Node.js dependencies (if any local tooling)
+node_modules/
+
+# Python cache and virtual environments
+__pycache__/
+*.pyc
+*.pyo
+venv/
+env/
+.venv/
+
+# ============================================
+# IDE and Editor Files
+# ============================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ============================================
+# OS Generated Files
+# ============================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ============================================
+# Build Artifacts
+# ============================================
+dist/
+build/
+target/
+*.jar
+*.war
+
+# ============================================
+# Docker
+# ============================================
+.docker/
+docker-data/
+
+# ============================================
+# Security and Keys
+# ============================================
+# Never commit secrets!
+secrets/
+*.key
+*.pem
+*.p12
+*.keystore
+.secrets
+private/
+
+# ============================================
+# Backup Files
+# ============================================
+*.bak
+*.backup
+*.orig
