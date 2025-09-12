@@ -26,21 +26,25 @@ mkdir -p $LOG_DIR
 
 log() {
     echo -e "${BLUE}[$(date '+%Y-%m-%d %H:%M:%S')]${NC} $1"
+    mkdir -p "$LOG_DIR"
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_DIR/orchestrator.log"
 }
 
 error() {
     echo -e "${RED}[ERROR]${NC} $1"
+    mkdir -p "$LOG_DIR"
     echo "[ERROR] $(date '+%Y-%m-%d %H:%M:%S') $1" >> "$LOG_DIR/orchestrator.log"
 }
 
 success() {
     echo -e "${GREEN}[SUCCESS]${NC} $1"
+    mkdir -p "$LOG_DIR"
     echo "[SUCCESS] $(date '+%Y-%m-%d %H:%M:%S') $1" >> "$LOG_DIR/orchestrator.log"
 }
 
 warning() {
     echo -e "${YELLOW}[WARNING]${NC} $1"
+    mkdir -p "$LOG_DIR"
     echo "[WARNING] $(date '+%Y-%m-%d %H:%M:%S') $1" >> "$LOG_DIR/orchestrator.log"
 }
 
