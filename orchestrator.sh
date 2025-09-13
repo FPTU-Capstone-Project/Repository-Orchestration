@@ -689,23 +689,6 @@ case "${1:-start}" in
         ;;
     "dashboard")
         if command -v python3 &> /dev/null; then
-            # Setup Python virtual environment if needed
-            if [ ! -d "venv" ]; then
-                log "Setting up Python virtual environment for dashboard..."
-                if [ -f "setup-python-env.sh" ]; then
-                    ./setup-python-env.sh
-                else
-                    log "Creating virtual environment..."
-                    python3 -m venv venv
-                    source venv/bin/activate
-                    pip install --upgrade pip
-                    if [ -f "requirements.txt" ]; then
-                        pip install -r requirements.txt
-                        success "Python dependencies installed"
-                    fi
-                fi
-            fi
-            
             # Clear dashboard port if needed
             DASHBOARD_PORT=5001
             if lsof -Pi :$DASHBOARD_PORT -sTCP:LISTEN -t >/dev/null 2>&1; then
@@ -714,14 +697,40 @@ case "${1:-start}" in
                 sleep 1
             fi
             
-            log "Starting dashboard with virtual environment..."
-            # Activate venv and start dashboard
-            if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
-                source venv/Scripts/activate
-            else
-                source venv/bin/activate
+            # Setup Python virtual environment if needed and start dashboard in one go
+            if [ ! -d "venv" ]; then
+                log "Setting up Python virtual environment for dashboard..."
+                python3 -m venv venv
+                log "Virtual environment created"
             fi
-            python dashboard.py
+            
+            log "Starting dashboard with virtual environment..."
+            
+            # Create a single shell script that handles activation and dashboard startup
+            cat > temp_dashboard_start.sh << 'EOF'
+#!/bin/bash
+# Activate virtual environment
+if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
+    source venv/Scripts/activate
+else
+    source venv/bin/activate
+fi
+
+# Upgrade pip if needed
+pip install --upgrade pip > /dev/null 2>&1
+
+# Install requirements if they exist
+if [ -f "requirements.txt" ]; then
+    pip install -r requirements.txt > /dev/null 2>&1
+fi
+
+# Start dashboard
+python dashboard.py
+EOF
+            
+            chmod +x temp_dashboard_start.sh
+            ./temp_dashboard_start.sh
+            rm -f temp_dashboard_start.sh
         else
             error "Python3 not found. Dashboard requires Python3."
         fi
