@@ -92,13 +92,19 @@ git clone https://github.com/FPTU-Capstone-Project/Repository-Orchestration.git
 cd Repository-Orchestration
 ```
 
-**Step 2: One-Time Setup and Auto-Start**
+**Step 2: Make Scripts Executable**
+```bash
+# Make scripts runnable (required after git clone)
+chmod +x *.sh
+```
+
+**Step 3: One-Time Setup and Auto-Start**
 ```bash
 # Run this only once - it installs everything AND starts the system
 ./install.sh
 ```
 
-**Step 3: Use the Application**
+**Step 4: Use the Application**
 - Open your web browser
 - Go to: `http://localhost:3000` (this is your main app)
 - The system runs automatically in the background
@@ -109,7 +115,7 @@ cd Repository-Orchestration
 - At the end: Clear instructions with web links
 - In your browser: The Motorbike Sharing application interface
 
-**Step 4: Stop When Done**
+**Step 5: Stop When Done**
 ```bash
 # Run this when you're finished
 ./orchestrator.sh stop
@@ -121,22 +127,46 @@ cd Repository-Orchestration
 ./orchestrator.sh
 ```
 
-**How to Open Terminal/Command Line:**
+**IMPORTANT: Setup Required for Different Operating Systems:**
 
 <details>
-<summary>Windows Users</summary>
+<summary>Windows Users - Setup Required</summary>
 
-1. Press `Windows Key + R`
-2. Type `cmd` and press Enter
-3. A black window opens - this is your command prompt
+**Windows Command Prompt CANNOT run bash scripts. You need ONE of these options:**
+
+**Option 1: Git Bash (Recommended for beginners)**
+1. Download Git from: https://git-scm.com/download/win
+2. During installation, make sure to select "Git Bash Here"
+3. After installation, right-click in any folder → "Git Bash Here"
+4. This opens a terminal that can run bash scripts
+
+**Option 2: Windows Subsystem for Linux (WSL)**
+1. Open PowerShell as Administrator
+2. Run: `wsl --install`
+3. Restart your computer
+4. Open "Ubuntu" or "WSL" from Start menu
+5. This gives you a full Linux terminal
+
+**How to access:**
+- Git Bash: Right-click in folder → "Git Bash Here"
+- WSL: Search "Ubuntu" or "WSL" in Start menu
 </details>
 
 <details>
-<summary>Mac Users</summary>
+<summary>Mac Users - Ready to Use</summary>
 
 1. Press `Cmd + Space` to open Spotlight
 2. Type `Terminal` and press Enter
 3. A window opens - this is your terminal
+4. Mac has bash/zsh built-in, ready to use!
+</details>
+
+<details>
+<summary>Linux Users - Ready to Use</summary>
+
+1. Press `Ctrl + Alt + T` (most distributions)
+2. Or search "Terminal" in applications
+3. Linux has bash built-in, ready to use!
 </details>
 
 <details>
@@ -394,6 +424,45 @@ This means Git is not installed on your computer.
 2. A popup will appear - click "Install"
 3. Wait for it to finish
 4. Try the commands again
+</details>
+
+<details>
+<summary>I Get "Permission Denied" When Running Scripts</summary>
+
+This means the scripts don't have execute permission.
+
+**Solution:**
+```bash
+# Make all scripts executable
+chmod +x *.sh
+
+# Then try running the script again
+./install.sh
+```
+
+**If chmod doesn't work (Windows):**
+- Make sure you're using Git Bash or WSL, not Command Prompt
+- Command Prompt cannot run bash scripts
+</details>
+
+<details>
+<summary>Scripts Won't Run on Windows</summary>
+
+**Problem:** Windows Command Prompt cannot run bash scripts (.sh files)
+
+**Solutions:**
+1. **Use Git Bash** (easiest):
+   - Install Git from https://git-scm.com/download/win
+   - Right-click in your project folder → "Git Bash Here"
+   - Run commands in Git Bash window
+
+2. **Use WSL** (advanced):
+   - Enable WSL: `wsl --install` (in PowerShell as Admin)
+   - Use Ubuntu/WSL terminal instead of Command Prompt
+
+3. **Alternative for PowerShell users:**
+   - Some scripts may work with: `bash ./install.sh`
+   - But Git Bash is still recommended
 </details>
 
 <details>
