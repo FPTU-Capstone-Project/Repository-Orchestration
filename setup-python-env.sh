@@ -70,22 +70,7 @@ else
     exit 1
 fi
 
-# Create activation helper script
-cat > activate-env.sh << 'EOF'
-#!/bin/bash
-# Quick activation script for Python virtual environment
-
-if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
-    source venv/Scripts/activate
-else
-    source venv/bin/activate
-fi
-
-echo "🐍 Python virtual environment activated!"
-echo "💡 To deactivate, run: deactivate"
-EOF
-
-chmod +x activate-env.sh
+# Note: The orchestrator.sh handles activation directly, no helper script needed
 
 echo ""
 echo "================================================"
@@ -97,7 +82,8 @@ echo -e "${BLUE}📋 Installed packages:${NC}"
 pip list --format=table
 echo ""
 echo -e "${YELLOW}💡 Usage:${NC}"
-echo "  • Activate: source activate-env.sh"
+echo "  • The orchestrator.sh automatically handles virtual environment activation"
+echo "  • Manual activation: source venv/bin/activate (Linux/macOS) or source venv/Scripts/activate (Windows)"
 echo "  • Deactivate: deactivate"
 echo "  • Run dashboard: python dashboard.py (after activation)"
 echo ""

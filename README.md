@@ -80,44 +80,30 @@ That's it! The system will automatically handle everything else.
 
 ## System Architecture
 
-For detailed system architecture, flow diagrams, and technical documentation, see: [Architecture Documentation](ARCHITECTURE.md)
+For detailed system architecture, flow diagrams, and technical documentation, see: [Architecture Documentation](https://github.com/FPTU-Capstone-Project/Repository-Orchestration/blob/master/ARCHITECTURE.md)
 
 ## Services Overview
 
 ### Backend Service
 - **Technology**: Spring Boot (Java)
 - **Default Port**: 8080 (Direct mode) / 8081 (Docker mode)  
-- **Purpose**: REST API server providing all business logic
-- **Features**:
-  - User authentication and authorization
-  - Motorbike management
-  - Booking system
-  - Payment integration
-  - Real-time data processing
+- **Purpose**: API server from backend repository
+- **Management**: Automatically cloned and managed by orchestrator
 - **API Documentation**: Available at `/swagger-ui.html` when running
 - **Health Check**: Available at `/actuator/health`
 
 ### Frontend Service
 - **Technology**: React.js
 - **Default Port**: 3000
-- **Purpose**: User interface for the motorbike sharing application
-- **Features**:
-  - Responsive web design
-  - Real-time updates
-  - Interactive maps
-  - User dashboard
-  - Booking interface
+- **Purpose**: Web application from frontend repository
+- **Management**: Automatically cloned and managed by orchestrator
+- **Development**: Hot-reload enabled for development
 
 ### Database Service
 - **Technology**: PostgreSQL
 - **Default Port**: 5432 (system) / 5433 (Docker development)
-- **Purpose**: Data persistence and management
-- **Features**:
-  - User data storage
-  - Motorbike inventory
-  - Booking records
-  - Payment history
-  - Analytics data
+- **Purpose**: Data persistence layer
+- **Management**: Automatically configured by backend service
 
 ### Dashboard Service
 - **Technology**: Python Flask
