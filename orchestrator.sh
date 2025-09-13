@@ -183,10 +183,21 @@ check_system_requirements() {
         log "Maven version: $mvn_version"
     fi
     
-    # Check Docker status (optional - can run without Docker)
+    # Check Docker status (REQUIRED for full local development)
     if ! docker info &> /dev/null; then
-        warning "Docker is not running. Some features may be limited."
-        warning "To use Docker mode, please start Docker Desktop."
+        error "Docker is REQUIRED for full local development!"
+        echo ""
+        echo -e "${YELLOW}This project is configured for Docker-only local development:${NC}"
+        echo "• PostgreSQL database runs in Docker container"
+        echo "• Backend runs in Docker container"
+        echo "• Ensures consistent development environment"
+        echo ""
+        echo -e "${BLUE}To start Docker:${NC}"
+        echo "1. Open Docker Desktop application"
+        echo "2. Wait for Docker to start (green status)"
+        echo "3. Run orchestrator again"
+        echo ""
+        requirements_met=false
     else
         success "Docker is running and available"
     fi
@@ -338,24 +349,22 @@ setup_backend() {
             log "Docker available - using dev.sh with Docker"
             ./dev.sh > "../$LOG_DIR/backend-build.log" 2>&1 &
         else
-            warning "Docker not running - dev.sh requires Docker"
-            log "Falling back to Maven direct execution..."
-            
-            # Fallback to Maven without Docker
-            if [ -f "pom.xml" ]; then
-                log "Building backend with Maven (fallback mode)..."
-                mvn clean install -DskipTests > "../$LOG_DIR/backend-build.log" 2>&1
-                success "Backend build completed"
-                
-                log "Starting backend server on port 8080..."
-                nohup mvn spring-boot:run > "../$LOG_DIR/backend-runtime.log" 2>&1 &
-                # Update port for non-Docker mode
-                BE_PORT=8080
-            else
-                error "No pom.xml found for Maven fallback"
-                cd ..
-                return 1
-            fi
+            error "Docker is required for full local development!"
+            error "This project requires Docker containers for PostgreSQL database."
+            echo ""
+            echo -e "${YELLOW}Please start Docker Desktop and try again:${NC}"
+            echo "1. Open Docker Desktop application"
+            echo "2. Wait for Docker to start (green status)"
+            echo "3. Run orchestrator again"
+            echo ""
+            echo -e "${BLUE}Why Docker is required:${NC}"
+            echo "• PostgreSQL database runs in Docker container (port 5433)"
+            echo "• Ensures consistent development environment"
+            echo "• Isolated from system PostgreSQL"
+            echo "• Easy data reset and management"
+            echo ""
+            cd ..
+            return 1
         fi
     else
         log "No dev.sh found - using standard Maven commands..."
