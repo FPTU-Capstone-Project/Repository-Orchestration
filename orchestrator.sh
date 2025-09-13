@@ -566,23 +566,31 @@ stop_services() {
         echo -e "${YELLOW}⚬ None running${NC}"
     fi
     
-    # 3. Clean additional development ports (merged from clean functionality)
+    # 3. Clean ONLY project-specific ports (avoid Docker Engine ports)
     echo -n -e "${BLUE}🧹 Port cleanup:${NC} "
     local cleaned_count=0
-    local common_ports=(3001 4000 4200 5000 5173 8000 8081 9000 9001)
+    # Only clean specific project ports, exclude Docker system ports
+    local project_ports=(3001 4000 4200 5173)
     
-    for port in "${common_ports[@]}"; do
+    for port in "${project_ports[@]}"; do
         if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
-            kill -9 $(lsof -Pi :$port -sTCP:LISTEN -t) 2>/dev/null || true
-            ((cleaned_count++))
+            # Be more careful - check process name before killing
+            local pids=$(lsof -Pi :$port -sTCP:LISTEN -t)
+            for pid in $pids; do
+                local process_name=$(ps -p $pid -o comm= 2>/dev/null || echo "unknown")
+                # Only kill if it's NOT a Docker process
+                if [[ "$process_name" != "com.docker"* ]] && [[ "$process_name" != "Docker"* ]]; then
+                    kill -9 $pid 2>/dev/null || true
+                    ((cleaned_count++))
+                fi
+            done
         fi
     done
     
-    # Kill remaining development processes (be more specific to avoid Docker)
-    if pkill -f "npm.*start" 2>/dev/null; then ((cleaned_count++)); fi
-    if pkill -f "node.*frontend" 2>/dev/null; then ((cleaned_count++)); fi
-    if pkill -f "vite" 2>/dev/null; then ((cleaned_count++)); fi
-    if pkill -f "webpack" 2>/dev/null; then ((cleaned_count++)); fi
+    # Kill ONLY specific development processes (very targeted)
+    if pkill -f "npm.*start.*frontend" 2>/dev/null; then ((cleaned_count++)); fi
+    if pkill -f "vite.*dev" 2>/dev/null; then ((cleaned_count++)); fi
+    if pkill -f "webpack.*serve" 2>/dev/null; then ((cleaned_count++)); fi
     
     if [ $cleaned_count -gt 0 ]; then
         echo -e "${GREEN}✓ Cleaned ($cleaned_count ports/processes)${NC}"

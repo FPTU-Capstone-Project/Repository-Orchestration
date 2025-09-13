@@ -37,94 +37,78 @@ A comprehensive full-stack application for motorbike sharing services with autom
 
 ## Quick Start
 
-### For Complete Beginners
+### 🚀 COMPLETELY NEW MACHINE (Zero Setup)
 
-If you have a fresh machine with nothing installed:
+**ONE COMMAND for everything from scratch:**
 
 ```bash
-# Step 1: Run the installation script
-./install.sh
-
-# Step 2: Start the system
-./orchestrator.sh
-
-# Step 3: Open your browser and visit:
-# - Frontend: http://localhost:3000
-# - Backend API: http://localhost:8080
+# Download and run the complete setup (requires only basic terminal)
+curl -fsSL https://raw.githubusercontent.com/FPTU-Capstone-Project/Repository-Orchestration/main/quick-setup.sh | bash
 ```
 
-That's it! The system will automatically handle everything else.
+**What this does:**
+- Installs ALL requirements (Git, Docker, Node.js, Java, Maven, Python)
+- Downloads the project
+- Starts everything automatically
+- Works on macOS, Linux, and Windows (Git Bash)
 
-### For Developers
+**That's it! 🎉** Your system will be running in ~10-15 minutes.
 
+---
+
+### 🛠️ IF YOU ALREADY HAVE BASIC TOOLS
+
+**Prerequisites REQUIRED:**
+- Git
+- Docker Desktop (MUST be running)
+- Node.js 16+
+- Java 17+
+- Maven 3.6+
+- Python 3.8+
+
+**Quick Setup:**
 ```bash
-# Start development environment
-./orchestrator.sh start
-
-# Open web dashboard for monitoring
-./orchestrator.sh dashboard
-
-# View live logs
-./orchestrator.sh logs all
-
-# Stop everything when done
-./orchestrator.sh stop
-```
-
-### For Non-Technical Users
-
-**What This System Does:**
-This is a complete motorbike sharing application (like bike-sharing but for motorbikes). It includes:
-- A website where users can rent motorbikes
-- A backend system that manages all the data
-- Everything runs on your computer for development/testing
-
-**Step 1: Get the Code**
-```bash
-# Open Terminal (macOS) or Command Prompt (Windows)
-# Navigate to where you want the project (like Desktop)
-cd Desktop
-
 # Download the project
 git clone https://github.com/FPTU-Capstone-Project/Repository-Orchestration.git
-
-# Enter the project folder
 cd Repository-Orchestration
-```
 
-**Step 2: Make Scripts Executable**
-```bash
-# Make scripts runnable (required after git clone)
+# Make scripts runnable
 chmod +x *.sh
-```
 
-**Step 3: One-Time Setup and Auto-Start**
-```bash
-# Run this only once - it installs everything AND starts the system
-./install.sh
-```
-
-**Step 4: Use the Application**
-- Open your web browser
-- Go to: `http://localhost:3000` (this is your main app)
-- The system runs automatically in the background
-
-**What You'll See:**
-- When starting: Lots of text downloading and installing things (this is normal!)
-- Success messages like "Frontend is ready!" and "Backend is ready!"
-- At the end: Clear instructions with web links
-- In your browser: The Motorbike Sharing application interface
-
-**Step 5: Stop When Done**
-```bash
-# Run this when you're finished
-./orchestrator.sh stop
-```
-
-**Next Time Usage:**
-```bash
-# For subsequent runs (after initial setup), just use:
+# Start everything (auto-installs what's missing)
 ./orchestrator.sh
+```
+
+---
+
+### 📱 For Non-Technical Users
+
+**What This System Does:**
+Complete motorbike sharing application that runs on your computer:
+- Website for renting motorbikes
+- Backend system for data management  
+- Database for storing information
+- Everything isolated and safe
+
+**Method 1: Super Easy (Recommended)**
+```bash
+# Copy-paste this ONE command in Terminal:
+curl -fsSL https://raw.githubusercontent.com/FPTU-Capstone-Project/Repository-Orchestration/main/quick-setup.sh | bash
+```
+
+**Method 2: Step by Step**
+1. Download project manually from GitHub
+2. Open Terminal/Command Prompt in project folder
+3. Run: `chmod +x *.sh`
+4. Run: `./orchestrator.sh`
+
+**Access Your Application:**
+- Website: `http://localhost:3000`
+- Admin Panel: `http://localhost:5001`
+
+**Stop Everything:**
+```bash
+./orchestrator.sh stop
 ```
 
 **IMPORTANT: Setup Required for Different Operating Systems:**
@@ -368,132 +352,101 @@ Open `http://localhost:5001` in your browser
 - Frontend: `logs/frontend-runtime.log`
 - System: `logs/orchestrator.log`
 
-## Development Modes
+## Development Architecture
 
-The system automatically detects and switches between two modes:
+This system is designed for **Docker-only local development**:
 
-### Docker Mode
-**When**: Docker Desktop is running
-**Backend Port**: 8081
-**Features**:
-- Isolated containers
-- Production-like environment
-- Automatic database setup
-- Container orchestration
+### Full Docker Stack
+**Requirements**: Docker Desktop MUST be running
+**Architecture**:
+- **PostgreSQL Database**: Isolated container on port 5433
+- **Backend API**: Spring Boot container on port 8081  
+- **Frontend**: React dev server on port 3000
+- **Dashboard**: Python Flask on port 5001
 
-### Direct Mode  
-**When**: Docker is not available
-**Backend Port**: 8080
-**Features**:
-- Direct Maven execution
-- Faster startup
-- Development-friendly
-- System resource usage
+**Benefits**:
+- ✅ **Consistent environment** across all machines
+- ✅ **Isolated data** - won't conflict with system PostgreSQL
+- ✅ **Easy reset** - just restart containers
+- ✅ **Production-like** setup for development
+- ✅ **Team consistency** - everyone uses identical setup
+
+**No Fallback Modes**: This ensures all developers have the same experience and prevents environment-related bugs.
 
 ## Troubleshooting
 
 **For Non-Technical Users:**
 
 <details>
-<summary>I Can't Find Terminal/Command Prompt</summary>
+<summary>The ONE-COMMAND Setup Failed</summary>
 
-**Windows:**
-1. Click the Start button
-2. Type "cmd" or "Command Prompt"
-3. Click on the result that appears
-4. A black window should open
+**Most common issues:**
 
-**Mac:**
-1. Press and hold the `Command` key and press `Space`
-2. Type "Terminal"
-3. Press Enter
-4. A window with white or black background should open
+1. **No Terminal/Command Prompt access:**
+   - Windows: Press Windows Key, type "cmd", press Enter
+   - Mac: Press Cmd+Space, type "Terminal", press Enter
+
+2. **"curl command not found":**
+   - Download the project manually from GitHub
+   - Follow Method 2 in the instructions above
+
+3. **Permission denied:**
+   - Try running: `chmod +x quick-setup.sh && ./quick-setup.sh`
 </details>
 
 <details>
-<summary>I Get "Command Not Found" or "Git Not Recognized"</summary>
+<summary>Docker Issues</summary>
 
-This means Git is not installed on your computer.
+**"Docker is REQUIRED" error:**
+1. Docker Desktop is not installed or not running
+2. Install Docker Desktop for your OS:
+   - Mac: https://desktop.docker.com/mac/main/amd64/Docker.dmg
+   - Windows: https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe
+   - Linux: Follow https://docs.docker.com/engine/install/
+3. Start Docker Desktop and wait for green status
+4. Try again
 
-**Windows:**
-1. Go to https://git-scm.com/download/win
-2. Download and install Git with all default options
-3. Close and reopen Command Prompt
-4. Try the commands again
-
-**Mac:**
-1. Run this in Terminal: `xcode-select --install`
-2. A popup will appear - click "Install"
-3. Wait for it to finish
-4. Try the commands again
+**IMPORTANT:** Docker Desktop MUST be running before starting the project.
 </details>
 
 <details>
-<summary>I Get "Permission Denied" When Running Scripts</summary>
+<summary>Stop Command Kills Docker</summary>
 
-This means the scripts don't have execute permission.
+**Issue:** Running `./orchestrator.sh stop` turns off Docker Desktop completely.
 
-**Solution:**
-```bash
-# Make all scripts executable
-chmod +x *.sh
+**This is fixed!** The latest version only stops project containers, not Docker Engine.
 
-# Then try running the script again
-./install.sh
-```
-
-**If chmod doesn't work (Windows):**
-- Make sure you're using Git Bash or WSL, not Command Prompt
-- Command Prompt cannot run bash scripts
+**If you still have this issue:**
+1. Update the orchestrator: `git pull` in the project folder
+2. Docker Desktop should stay running after stop
 </details>
 
 <details>
-<summary>Scripts Won't Run on Windows</summary>
+<summary>Website Won't Open (localhost:3000)</summary>
 
-**Problem:** Windows Command Prompt cannot run bash scripts (.sh files)
-
-**Solutions:**
-1. **Use Git Bash** (easiest):
-   - Install Git from https://git-scm.com/download/win
-   - Right-click in your project folder → "Git Bash Here"
-   - Run commands in Git Bash window
-
-2. **Use WSL** (advanced):
-   - Enable WSL: `wsl --install` (in PowerShell as Admin)
-   - Use Ubuntu/WSL terminal instead of Command Prompt
-
-3. **Alternative for PowerShell users:**
-   - Some scripts may work with: `bash ./install.sh`
-   - But Git Bash is still recommended
+1. **Check Docker is running:** Look for Docker Desktop in system tray
+2. **Wait longer:** First startup takes 3-5 minutes
+3. **Check status:** Run `./orchestrator.sh status`
+4. **Check ports:** Make sure nothing else is using port 3000
+5. **Restart everything:** `./orchestrator.sh stop` then `./orchestrator.sh`
 </details>
 
 <details>
-<summary>The Website Won't Open (localhost:3000)</summary>
+<summary>Lots of Red Text/Error Messages</summary>
 
-1. Make sure you ran `./orchestrator.sh` first
-2. Wait 2-3 minutes for everything to start
-3. Try refreshing your browser
-4. If still not working, run `./orchestrator.sh status` to check
-</details>
+**This is usually NORMAL during setup!**
 
-<details>
-<summary>I See Lots of Red Text/Errors</summary>
+Red text during installation means:
+- Downloading and installing dependencies
+- Building Docker containers
+- Setting up databases
 
-This is usually normal during the first setup. The system installs many things automatically.
+**Only worry if:**
+- The process completely stops
+- You see "FAILED" or "ERROR" at the end
+- No "SUCCESS" messages appear
 
-1. Wait for the process to complete
-2. If it stops and asks for input, just press Enter
-3. If you see "SUCCESS" or "ready" messages, everything is working
-4. Try accessing the website at `http://localhost:3000`
-</details>
-
-<details>
-<summary>Everything Looks Frozen/Stuck</summary>
-
-1. Wait 5-10 minutes (first setup takes time)
-2. If nothing happens, press `Ctrl+C` to stop
-3. Run `./orchestrator.sh stop` to clean up
-4. Try `./orchestrator.sh` again
+**If stuck:** Wait 10 minutes, then restart
 </details>
 
 **For Technical Users:**
