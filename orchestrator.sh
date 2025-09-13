@@ -17,7 +17,7 @@ BE_REPO="https://github.com/FPTU-Capstone-Project/MotorbikeSharingSystem_BE.git"
 FE_REPO="https://github.com/FPTU-Capstone-Project/MotorbikeSharingSystem_FE.git"
 BE_DIR="backend"
 FE_DIR="frontend"
-BE_PORT=8080
+BE_PORT=8081
 FE_PORT=3000
 LOG_DIR="logs"
 
@@ -279,18 +279,43 @@ setup_backend() {
     log "Setting up backend..."
     cd $BE_DIR
     
-    # Use the existing dev.sh if available, otherwise use standard Maven commands
+    # Check if dev.sh exists and Docker is available
     if [ -f "dev.sh" ]; then
-        log "Using existing dev.sh script for backend setup"
+        log "Found dev.sh script for backend setup"
         chmod +x dev.sh
-        ./dev.sh > "../$LOG_DIR/backend-build.log" 2>&1 &
+        
+        # Check if Docker is needed and available
+        if docker info &> /dev/null; then
+            log "Docker available - using dev.sh with Docker"
+            ./dev.sh > "../$LOG_DIR/backend-build.log" 2>&1 &
+        else
+            warning "Docker not running - dev.sh requires Docker"
+            log "Falling back to Maven direct execution..."
+            
+            # Fallback to Maven without Docker
+            if [ -f "pom.xml" ]; then
+                log "Building backend with Maven (fallback mode)..."
+                mvn clean install -DskipTests > "../$LOG_DIR/backend-build.log" 2>&1
+                success "Backend build completed"
+                
+                log "Starting backend server on port 8080..."
+                nohup mvn spring-boot:run > "../$LOG_DIR/backend-runtime.log" 2>&1 &
+                # Update port for non-Docker mode
+                BE_PORT=8080
+            else
+                error "No pom.xml found for Maven fallback"
+                cd ..
+                return 1
+            fi
+        fi
     else
-        log "Building backend with Maven..."
+        log "No dev.sh found - using standard Maven commands..."
         mvn clean install -DskipTests > "../$LOG_DIR/backend-build.log" 2>&1
         success "Backend build completed"
         
         log "Starting backend server..."
         nohup mvn spring-boot:run > "../$LOG_DIR/backend-runtime.log" 2>&1 &
+        BE_PORT=8080
     fi
     
     cd ..
@@ -327,113 +352,197 @@ setup_frontend() {
 # Wait for services to be ready
 wait_for_services() {
     log "Waiting for services to start..."
+    echo ""
     
     # Wait for backend
-    log "Checking backend health..."
+    echo -n -e "${BLUE}🔧 Backend health check:${NC} "
+    local backend_ready=false
     for i in {1..30}; do
         if curl -s http://localhost:$BE_PORT/actuator/health &> /dev/null || \
            curl -s http://localhost:$BE_PORT/health &> /dev/null || \
            curl -s http://localhost:$BE_PORT &> /dev/null; then
-            success "Backend is ready on port $BE_PORT"
+            echo -e "${GREEN}✓ Ready${NC}"
+            backend_ready=true
             break
         fi
         
         if [ $i -eq 30 ]; then
-            warning "Backend health check timeout. Check logs in $LOG_DIR/backend-runtime.log"
+            echo -e "${YELLOW}⚠ Timeout${NC}"
+            warning "Backend startup timeout. Service may still be starting in background."
+            warning "Check logs: $LOG_DIR/backend-runtime.log"
         else
+            echo -n "."
             sleep 5
         fi
     done
     
-    # Wait for frontend
-    log "Checking frontend..."
-    for i in {1..30}; do
+    # Wait for frontend  
+    echo -n -e "${BLUE}📱 Frontend health check:${NC} "
+    local frontend_ready=false
+    for i in {1..20}; do
         if curl -s http://localhost:$FE_PORT &> /dev/null; then
-            success "Frontend is ready on port $FE_PORT"
+            echo -e "${GREEN}✓ Ready${NC}"
+            frontend_ready=true
             break
         fi
         
-        if [ $i -eq 30 ]; then
-            warning "Frontend startup timeout. Check logs in $LOG_DIR/frontend-runtime.log"
+        if [ $i -eq 20 ]; then
+            echo -e "${YELLOW}⚠ Timeout${NC}"
+            warning "Frontend startup timeout. Service may still be starting in background."
+            warning "Check logs: $LOG_DIR/frontend-runtime.log"
         else
+            echo -n "."
             sleep 3
         fi
     done
+    
+    echo ""
 }
 
-# Display status and URLs
+# Display detailed service status and URLs
 show_status() {
     echo ""
     echo "================================================"
     echo -e "${GREEN}🚀 Motorbike Sharing System is ready!${NC}"
     echo "================================================"
     echo ""
-    echo -e "${BLUE}📱 Frontend:${NC} http://localhost:$FE_PORT"
-    echo -e "${BLUE}⚙️  Backend:${NC}  http://localhost:$BE_PORT"
-    echo ""
-    echo -e "${YELLOW}📋 Logs:${NC}"
-    echo "   Backend build: $LOG_DIR/backend-build.log"
-    echo "   Backend runtime: $LOG_DIR/backend-runtime.log"
-    echo "   Frontend install: $LOG_DIR/frontend-install.log"
-    echo "   Frontend runtime: $LOG_DIR/frontend-runtime.log"
-    echo "   Orchestrator: $LOG_DIR/orchestrator.log"
-    echo ""
-    echo -e "${YELLOW}🛑 To stop:${NC} ./orchestrator.sh stop"
-    echo -e "${YELLOW}📊 Dashboard:${NC} ./orchestrator.sh dashboard"
-    echo ""
-}
-
-# Stop all services
-stop_services() {
-    log "Stopping all services..."
     
-    # Kill processes on specific ports
+    # Check actual service status
+    local be_running=false
+    local fe_running=false
+    
     if lsof -Pi :$BE_PORT -sTCP:LISTEN -t >/dev/null 2>&1; then
-        kill $(lsof -Pi :$BE_PORT -sTCP:LISTEN -t) 2>/dev/null || true
-        success "Backend stopped"
+        be_running=true
     fi
     
     if lsof -Pi :$FE_PORT -sTCP:LISTEN -t >/dev/null 2>&1; then
-        kill $(lsof -Pi :$FE_PORT -sTCP:LISTEN -t) 2>/dev/null || true
-        success "Frontend stopped"
+        fe_running=true
     fi
     
-    # Kill any remaining node/java processes from this orchestration
-    pkill -f "mvn spring-boot:run" 2>/dev/null || true
-    pkill -f "npm start" 2>/dev/null || true
+    echo -e "${BLUE}🌐 Service URLs:${NC}"
+    echo "   ┌─────────────────────────────────────────────────────"
     
-    success "All services stopped"
+    # Frontend status
+    if [ "$fe_running" = true ]; then
+        echo -e "   │ ${GREEN}✓${NC} ${BLUE}Frontend:${NC}  http://localhost:$FE_PORT (Running)"
+    else
+        echo -e "   │ ${RED}✗${NC} ${BLUE}Frontend:${NC}  http://localhost:$FE_PORT (Stopped)"
+    fi
+    
+    # Backend status with detailed endpoints
+    if [ "$be_running" = true ]; then
+        echo -e "   │ ${GREEN}✓${NC} ${BLUE}Backend:${NC}   http://localhost:$BE_PORT (Running)"
+        echo -e "   │   ├─ ${YELLOW}API Docs:${NC}    http://localhost:$BE_PORT/swagger-ui.html"
+        echo -e "   │   ├─ ${YELLOW}API Spec:${NC}    http://localhost:$BE_PORT/api-docs"  
+        echo -e "   │   └─ ${YELLOW}Health:${NC}      http://localhost:$BE_PORT/actuator/health"
+    else
+        echo -e "   │ ${RED}✗${NC} ${BLUE}Backend:${NC}   http://localhost:$BE_PORT (Stopped)"
+        echo -e "   │   ├─ API Docs:    (unavailable)"
+        echo -e "   │   ├─ API Spec:    (unavailable)"
+        echo -e "   │   └─ Health:      (unavailable)"
+    fi
+    
+    # Dashboard
+    echo -e "   │ ${BLUE}📊 Dashboard:${NC} http://localhost:5001"
+    echo "   └─────────────────────────────────────────────────────"
+    echo ""
+    
+    echo -e "${YELLOW}📋 Log Files:${NC}"
+    echo "   • Backend build:   $LOG_DIR/backend-build.log"
+    echo "   • Backend runtime: $LOG_DIR/backend-runtime.log"
+    echo "   • Frontend install: $LOG_DIR/frontend-install.log"
+    echo "   • Frontend runtime: $LOG_DIR/frontend-runtime.log"
+    echo "   • Orchestrator:    $LOG_DIR/orchestrator.log"
+    echo ""
+    
+    echo -e "${YELLOW}🔧 Management Commands:${NC}"
+    echo "   • Stop everything:  ./orchestrator.sh stop (Docker + processes + ports)"
+    echo "   • View dashboard:   ./orchestrator.sh dashboard"
+    echo "   • Check status:     ./orchestrator.sh status"
+    echo "   • View logs:        ./orchestrator.sh logs [backend|frontend|all]"
+    echo "   • Restart all:      ./orchestrator.sh restart"
+    echo ""
 }
 
-# Comprehensive stop-all function (including common development ports)
-stop_all_services() {
-    log "Stopping ALL development services and clearing ports..."
+# Stop all services (comprehensive: processes + Docker + ports)
+stop_services() {
+    log "Stopping all services (processes + Docker + ports)..."
+    echo ""
     
-    # Common development ports
-    local common_ports=(3000 3001 5000 5173 8000 8080 8081 9000 9001 4000 4200)
+    # 1. Stop Docker containers if docker-compose.yml exists
+    if [ -f "docker-compose.yml" ] && command -v docker &> /dev/null; then
+        echo -n -e "${BLUE}🐳 Docker containers:${NC} "
+        if docker info &> /dev/null; then
+            # Check if containers are running
+            local containers=$(docker-compose ps -q 2>/dev/null || echo "")
+            if [ -n "$containers" ]; then
+                docker-compose down --remove-orphans &> /dev/null
+                echo -e "${GREEN}✓ Stopped${NC}"
+            else
+                echo -e "${YELLOW}⚬ None running${NC}"
+            fi
+        else
+            echo -e "${YELLOW}⚬ Docker not running${NC}"
+        fi
+    fi
     
-    for port in "${common_ports[@]}"; do
+    # 2. Stop development processes on specific ports
+    echo -n -e "${BLUE}🔧 Development processes:${NC} "
+    local stopped_count=0
+    
+    # Kill processes on project ports
+    for port in $BE_PORT $FE_PORT 5001; do
         if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
-            log "Stopping service on port $port..."
-            kill -9 $(lsof -Pi :$port -sTCP:LISTEN -t) 2>/dev/null || true
+            kill $(lsof -Pi :$port -sTCP:LISTEN -t) 2>/dev/null || true
+            ((stopped_count++))
         fi
     done
     
-    # Kill common development processes
-    pkill -f "npm" 2>/dev/null || true
-    pkill -f "node" 2>/dev/null || true
-    pkill -f "mvn" 2>/dev/null || true
-    pkill -f "gradle" 2>/dev/null || true
-    pkill -f "python -m http.server" 2>/dev/null || true
-    pkill -f "serve" 2>/dev/null || true
-    pkill -f "vite" 2>/dev/null || true
-    pkill -f "webpack" 2>/dev/null || true
+    # Kill specific development processes
+    if pkill -f "mvn spring-boot:run" 2>/dev/null; then ((stopped_count++)); fi
+    if pkill -f "npm start" 2>/dev/null; then ((stopped_count++)); fi
     
-    # Wait a moment for processes to terminate
+    if [ $stopped_count -gt 0 ]; then
+        echo -e "${GREEN}✓ Stopped ($stopped_count)${NC}"
+    else
+        echo -e "${YELLOW}⚬ None running${NC}"
+    fi
+    
+    # 3. Clean additional development ports (merged from clean functionality)
+    echo -n -e "${BLUE}🧹 Port cleanup:${NC} "
+    local cleaned_count=0
+    local common_ports=(3001 4000 4200 5000 5173 8000 8081 9000 9001)
+    
+    for port in "${common_ports[@]}"; do
+        if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
+            kill -9 $(lsof -Pi :$port -sTCP:LISTEN -t) 2>/dev/null || true
+            ((cleaned_count++))
+        fi
+    done
+    
+    # Kill remaining development processes
+    if pkill -f "npm" 2>/dev/null; then ((cleaned_count++)); fi
+    if pkill -f "node" 2>/dev/null; then ((cleaned_count++)); fi
+    if pkill -f "vite" 2>/dev/null; then ((cleaned_count++)); fi
+    if pkill -f "webpack" 2>/dev/null; then ((cleaned_count++)); fi
+    
+    if [ $cleaned_count -gt 0 ]; then
+        echo -e "${GREEN}✓ Cleaned ($cleaned_count ports/processes)${NC}"
+    else
+        echo -e "${YELLOW}⚬ All clean${NC}"
+    fi
+    
+    # Wait for processes to fully terminate
     sleep 2
     
-    success "All development services and ports cleared"
-    log "Safe to start fresh development environment"
+    echo ""
+    success "All services, containers, and ports stopped"
+}
+
+# Legacy stop-all function (now alias to stop_services for backward compatibility)
+stop_all_services() {
+    log "Running comprehensive stop (same as 'stop' command)..."
+    stop_services
 }
 
 # Status check
@@ -504,8 +613,39 @@ case "${1:-start}" in
         ;;
     "dashboard")
         if command -v python3 &> /dev/null; then
-            log "Starting dashboard..."
-            python3 dashboard.py
+            # Setup Python virtual environment if needed
+            if [ ! -d "venv" ]; then
+                log "Setting up Python virtual environment for dashboard..."
+                if [ -f "setup-python-env.sh" ]; then
+                    ./setup-python-env.sh
+                else
+                    log "Creating virtual environment..."
+                    python3 -m venv venv
+                    source venv/bin/activate
+                    pip install --upgrade pip
+                    if [ -f "requirements.txt" ]; then
+                        pip install -r requirements.txt
+                        success "Python dependencies installed"
+                    fi
+                fi
+            fi
+            
+            # Clear dashboard port if needed
+            DASHBOARD_PORT=5001
+            if lsof -Pi :$DASHBOARD_PORT -sTCP:LISTEN -t >/dev/null 2>&1; then
+                log "Clearing port $DASHBOARD_PORT for dashboard..."
+                kill -9 $(lsof -Pi :$DASHBOARD_PORT -sTCP:LISTEN -t) 2>/dev/null || true
+                sleep 1
+            fi
+            
+            log "Starting dashboard with virtual environment..."
+            # Activate venv and start dashboard
+            if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
+                source venv/Scripts/activate
+            else
+                source venv/bin/activate
+            fi
+            python dashboard.py
         else
             error "Python3 not found. Dashboard requires Python3."
         fi
@@ -533,12 +673,12 @@ case "${1:-start}" in
         echo "Usage: $0 [command]"
         echo ""
         echo "Commands:"
-        echo "  start         - Start all services (default, auto-clears conflicting ports)"
-        echo "  stop          - Stop project services only"
-        echo "  stop-all      - Stop ALL development services and clear common ports"
-        echo "  clean         - Alias for stop-all"
-        echo "  restart       - Restart project services"
-        echo "  clean-restart - Stop all services, then start fresh"
+        echo "  start         - Start all services (auto-clears conflicting ports)"
+        echo "  stop          - Stop ALL services (Docker containers + processes + ports)"
+        echo "  stop-all      - Alias for 'stop' (backward compatibility)"
+        echo "  clean         - Alias for 'stop' (backward compatibility)"
+        echo "  restart       - Restart all services"
+        echo "  clean-restart - Alias for 'restart' (backward compatibility)"
         echo "  status        - Check service status"
         echo "  dashboard     - Open web dashboard"
         echo "  logs          - View logs [backend|frontend|all]"
@@ -546,6 +686,11 @@ case "${1:-start}" in
         echo ""
         echo "Environment Variables:"
         echo "  AUTO_KILL_PORTS=false - Disable automatic port cleanup (default: true)"
+        echo ""
+        echo "Python Dashboard:"
+        echo "  • Dashboard automatically sets up Python virtual environment (venv/)"
+        echo "  • Dependencies installed from requirements.txt"
+        echo "  • No system-wide Python package installation"
         ;;
     *)
         error "Unknown command: $1"

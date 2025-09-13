@@ -1,432 +1,408 @@
-# 🏍️ Motorbike Sharing System - Orchestration Repository
+# Motorbike Sharing System
 
-**One-click deployment for the complete Motorbike Sharing System**
+A comprehensive full-stack application for motorbike sharing services with automated deployment and management tools.
 
-This repository provides a comprehensive orchestration solution that allows developers, non-technical users, and stakeholders to run the entire Motorbike Sharing System (Frontend + Backend) with a single command, while automatically staying up-to-date with the latest changes from development teams.
+## Table of Contents
 
-## 🚀 Quick Start
+<details>
+<summary>Click to expand</summary>
 
-### ⚡ Super Simple - One Command Setup
+- [Quick Start](#quick-start)
+  - [For Complete Beginners](#for-complete-beginners)
+  - [For Developers](#for-developers)
+  - [For Non-Technical Users](#for-non-technical-users)
+- [System Architecture](#system-architecture)
+- [Services Overview](#services-overview)
+  - [Backend Service](#backend-service)
+  - [Frontend Service](#frontend-service)
+  - [Database Service](#database-service)
+  - [Dashboard Service](#dashboard-service)
+  - [Orchestration Service](#orchestration-service)
+- [Installation Guide](#installation-guide)
+  - [Fresh Machine Setup](#fresh-machine-setup)
+  - [Requirements Check](#requirements-check)
+- [Usage Guide](#usage-guide)
+  - [Starting the System](#starting-the-system)
+  - [Stopping the System](#stopping-the-system)
+  - [Using the Dashboard](#using-the-dashboard)
+  - [Viewing Logs](#viewing-logs)
+- [Development Modes](#development-modes)
+  - [Docker Mode](#docker-mode)
+  - [Direct Mode](#direct-mode)
+- [Troubleshooting](#troubleshooting)
+- [Advanced Configuration](#advanced-configuration)
+- [Contributing](#contributing)
+
+</details>
+
+## Quick Start
+
+### For Complete Beginners
+
+If you have a fresh machine with nothing installed:
+
 ```bash
-# 1. Download this repository
-git clone https://github.com/FPTU-Capstone-Project/Repository-Orchestration.git
-cd Repository-Orchestration
-
-# 2. Run ONE command - that's it! 
+# Step 1: Run the installation script
 ./install.sh
 
-# The installer will:
-# ✅ Check your system
-# ✅ Install missing dependencies automatically
-# ✅ Start all services
-# ✅ Open the application in your browser
-```
-
-### 🎯 Alternative: Manual Steps
-```bash
-# If you prefer manual control:
-git clone https://github.com/FPTU-Capstone-Project/Repository-Orchestration.git
-cd Repository-Orchestration
-
-# Start everything with auto-install
+# Step 2: Start the system
 ./orchestrator.sh
 
-# Access the applications:
-# Frontend: http://localhost:3000
-# Backend: http://localhost:8080  
-# Dashboard: http://localhost:5000
+# Step 3: Open your browser and visit:
+# - Frontend: http://localhost:3000
+# - Backend API: http://localhost:8080
 ```
 
-### 👨‍💻 For Developers
-```bash
-# Full development setup
-git clone https://github.com/FPTU-Capstone-Project/Repository-Orchestration.git
-cd Repository-Orchestration
+That's it! The system will automatically handle everything else.
 
-# Start with monitoring dashboard
+### For Developers
+
+```bash
+# Start development environment
 ./orchestrator.sh start
+
+# Open web dashboard for monitoring
 ./orchestrator.sh dashboard
 
-# View real-time logs  
+# View live logs
 ./orchestrator.sh logs all
-```
 
-## 📋 Features
-
-### 🔧 Smart Environment Detection
-- **Automatic Prerequisites Check**: Verifies Java, Node.js, Maven, Docker, and Git
-- **Port Conflict Resolution**: Detects and reports port conflicts before starting
-- **Dependency Validation**: Ensures all required tools are installed and up-to-date
-- **Docker Status Monitoring**: Checks if Docker is running and accessible
-
-### 🔄 Automatic Updates
-- **Git Integration**: Automatically fetches latest changes from both repositories
-- **Smart Stashing**: Preserves local changes when pulling updates
-- **Version Tracking**: Shows current commit information for both frontend and backend
-- **Update Notifications**: Dashboard displays when new changes are available
-
-### 📊 Web Dashboard
-- **Real-time Monitoring**: Live status of all services
-- **One-click Controls**: Start, stop, and restart services from the web interface
-- **Log Viewer**: Browse logs from all services in real-time
-- **Commit History**: View latest changes from development teams
-- **Health Checks**: Automatic service health monitoring
-
-### 🎯 Multi-Environment Support
-- **Development Mode**: Full debugging and hot-reload capabilities
-- **Production Mode**: Optimized builds and performance monitoring  
-- **Docker Compose**: Containerized deployment with orchestration
-- **Hybrid Mode**: Mix of local development and containerized services
-
-## 🛠️ System Requirements
-
-### Minimum Requirements
-- **OS**: macOS, Linux, or Windows with WSL2
-- **RAM**: 4GB (8GB recommended)
-- **Storage**: 2GB available space
-- **Network**: Internet connection for initial setup
-
-### Required Software
-```bash
-# ✨ NO MANUAL INSTALLATION NEEDED! ✨
-# The installer automatically checks and installs:
-- Git (2.0+)           ← Installs automatically
-- Node.js (16.0+)      ← Installs automatically  
-- npm (8.0+)           ← Comes with Node.js
-- Java (11+)           ← Installs automatically
-- Maven (3.6+)         ← Installs automatically
-- Docker (20.0+)       ← Optional (installs if possible)
-- Python 3.7+         ← Optional (for dashboard)
-```
-
-## 📖 Usage Guide
-
-### Basic Commands
-
-```bash
-# Start all services (default command)
-./orchestrator.sh start
-./orchestrator.sh  # Same as 'start'
-
-# Stop all services
+# Stop everything when done
 ./orchestrator.sh stop
+```
 
-# Restart all services
-./orchestrator.sh restart
+### For Non-Technical Users
 
-# Check service status
+1. **Installation**: Double-click or run `./install.sh` once
+2. **Start**: Run `./orchestrator.sh` whenever you want to use the system
+3. **Access**: Open your web browser to `http://localhost:3000`
+4. **Stop**: Run `./orchestrator.sh stop` when finished
+
+## System Architecture
+
+For detailed system architecture, flow diagrams, and technical documentation, see: [Architecture Documentation](ARCHITECTURE.md)
+
+## Services Overview
+
+### Backend Service
+- **Technology**: Spring Boot (Java)
+- **Default Port**: 8080 (Direct mode) / 8081 (Docker mode)  
+- **Purpose**: REST API server providing all business logic
+- **Features**:
+  - User authentication and authorization
+  - Motorbike management
+  - Booking system
+  - Payment integration
+  - Real-time data processing
+- **API Documentation**: Available at `/swagger-ui.html` when running
+- **Health Check**: Available at `/actuator/health`
+
+### Frontend Service
+- **Technology**: React.js
+- **Default Port**: 3000
+- **Purpose**: User interface for the motorbike sharing application
+- **Features**:
+  - Responsive web design
+  - Real-time updates
+  - Interactive maps
+  - User dashboard
+  - Booking interface
+
+### Database Service
+- **Technology**: PostgreSQL
+- **Default Port**: 5432 (system) / 5433 (Docker development)
+- **Purpose**: Data persistence and management
+- **Features**:
+  - User data storage
+  - Motorbike inventory
+  - Booking records
+  - Payment history
+  - Analytics data
+
+### Dashboard Service
+- **Technology**: Python Flask
+- **Default Port**: 5001
+- **Purpose**: Development and monitoring dashboard
+- **Features**:
+  - Real-time service monitoring
+  - Log viewing
+  - Git repository management
+  - System control interface
+  - Service health checks
+
+### Orchestration Service
+- **Technology**: Bash scripting
+- **Purpose**: Automated system management and deployment
+- **Features**:
+  - Intelligent service startup/shutdown
+  - Docker and direct mode support
+  - Port conflict resolution
+  - Dependency management
+  - Error handling and recovery
+
+## Installation Guide
+
+### Fresh Machine Setup
+
+For a completely new machine without any development tools:
+
+```bash
+# The installation script will automatically install:
+# - Git (if not present)
+# - Node.js and npm
+# - Java Development Kit
+# - Maven
+# - Docker Desktop (optional)
+# - Python 3 and pip
+
+./install.sh
+```
+
+The installer will:
+1. Check your operating system
+2. Download and install missing dependencies  
+3. Configure the development environment
+4. Set up all required tools
+5. Test the installation
+
+### Requirements Check
+
+The system will automatically check and install these requirements:
+
+**Essential Requirements:**
+- Git (for repository management)
+- Node.js 16+ and npm (for frontend)
+- Java 17+ (for backend)
+- Maven 3.6+ (for backend build)
+- Python 3.8+ (for dashboard)
+
+**Optional Requirements:**
+- Docker Desktop (for containerized mode)
+- PostgreSQL (system installation, optional)
+
+## Usage Guide
+
+### Starting the System
+
+**Simple Start (Recommended):**
+```bash
+./orchestrator.sh
+```
+
+**With Options:**
+```bash
+# Start with verbose logging
+./orchestrator.sh start
+
+# Start and show dashboard
+./orchestrator.sh start && ./orchestrator.sh dashboard
+```
+
+**What Happens During Startup:**
+1. System requirements check
+2. Repository updates (pulls latest changes)
+3. Dependency installation
+4. Service startup (backend then frontend)
+5. Health checks
+6. Status display
+
+### Stopping the System
+
+**Complete Stop (Recommended):**
+```bash
+./orchestrator.sh stop
+```
+
+This will stop:
+- All running services
+- Docker containers (if running)
+- Development processes
+- Clear occupied ports
+
+**Check Status:**
+```bash
 ./orchestrator.sh status
+```
 
-# Open web dashboard
+### Using the Dashboard
+
+**Start Dashboard:**
+```bash
 ./orchestrator.sh dashboard
-
-# View logs
-./orchestrator.sh logs [backend|frontend|all]
-
-# Show help
-./orchestrator.sh help
 ```
 
-### Web Dashboard Features
+**Dashboard Features:**
+- Real-time service monitoring
+- One-click start/stop controls
+- Live log viewing
+- Repository status
+- Direct links to all services
+- System health monitoring
 
-Access the dashboard at `http://localhost:5000` to:
+**Access Dashboard:**
+Open `http://localhost:5001` in your browser
 
-- **Monitor Services**: Real-time status of Frontend, Backend, and Database
-- **Control Services**: Start/stop services with one click
-- **View Logs**: Real-time log streaming from all services
-- **Check Updates**: See latest commits and pull new changes
-- **Health Monitoring**: Automatic health checks and alerts
+### Viewing Logs
 
-## 🏗️ Architecture
-
-### Repository Structure
-```
-Repository-Orchestration/
-├── orchestrator.sh          # Main orchestration script
-├── dashboard.py            # Web dashboard application
-├── docker-compose.yml      # Container orchestration
-├── requirements.txt        # Python dependencies
-├── .env.example           # Environment configuration
-├── nginx/                 # Reverse proxy config
-├── logs/                  # Application logs
-│   ├── orchestrator.log
-│   ├── backend-build.log
-│   ├── backend-runtime.log
-│   ├── frontend-install.log
-│   └── frontend-runtime.log
-├── backend/              # Auto-cloned BE repository
-└── frontend/             # Auto-cloned FE repository
-```
-
-### Service Architecture
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Nginx (Port 80)                     │
-│                 Reverse Proxy & SSL                    │
-└─────────────────────────┬───────────────────────────────┘
-                          │
-┌─────────────────────────┼───────────────────────────────┐
-│                         │                               │
-│  Frontend (Port 3000)   │   Backend (Port 8080)        │
-│  React TypeScript       │   Spring Boot Java            │
-│                         │                               │
-└─────────────────────────┼───────────────────────────────┘
-                          │
-┌─────────────────────────┼───────────────────────────────┐
-│                         │                               │
-│  Database (Port 5432)   │   Dashboard (Port 5000)      │
-│  PostgreSQL             │   Python Flask                │
-│                         │                               │
-└─────────────────────────┴───────────────────────────────┘
-```
-
-## 🚦 Different Usage Scenarios
-
-### 1. Non-Technical Users (Stakeholders, QA, etc.)
+**All Logs:**
 ```bash
-# One-time setup
-git clone https://github.com/FPTU-Capstone-Project/Repository-Orchestration.git
-cd Repository-Orchestration
-./orchestrator.sh
-
-# Daily usage - just open the dashboard
-./orchestrator.sh dashboard
-# Then use web interface for all controls
-```
-
-### 2. Developers - Quick Testing
-```bash
-# Get latest code and run
-./orchestrator.sh start
-
-# Make changes in ./backend or ./frontend directories
-# Services will auto-reload with changes
-
-# View logs for debugging
-./orchestrator.sh logs backend
-```
-
-### 3. DevOps - Production Deployment
-```bash
-# Use Docker Compose for production
-docker-compose up -d
-
-# Monitor all services
-docker-compose logs -f
-
-# Scale services as needed
-docker-compose up -d --scale backend=2
-```
-
-### 4. CI/CD Integration
-```bash
-# Automated testing pipeline
-./orchestrator.sh start
-sleep 30  # Wait for services to be ready
-npm run test:e2e
-./orchestrator.sh stop
-```
-
-## 🔧 Configuration
-
-### Environment Variables
-Copy `.env.example` to `.env` and customize:
-
-```env
-# Repository URLs (usually don't change)
-BE_REPO=https://github.com/FPTU-Capstone-Project/MotorbikeSharingSystem_BE.git
-FE_REPO=https://github.com/FPTU-Capstone-Project/MotorbikeSharingSystem_FE.git
-
-# Service Ports (change if conflicts)
-BE_PORT=8080
-FE_PORT=3000
-DASHBOARD_PORT=5000
-
-# Database Configuration
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=motorbike_sharing
-DB_USER=admin
-DB_PASSWORD=admin123
-```
-
-### Custom Scripts
-You can override default behavior by creating:
-
-- `scripts/pre-start.sh` - Runs before starting services
-- `scripts/post-start.sh` - Runs after services are ready
-- `scripts/custom-build.sh` - Custom build process
-- `config/local.yml` - Local configuration overrides
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-#### Port Already in Use
-```bash
-# Check what's using the port
-lsof -i :8080
-lsof -i :3000
-
-# Kill processes if needed
-./orchestrator.sh stop
-
-# Or change ports in .env file
-```
-
-#### Docker Not Running
-```bash
-# Start Docker Desktop
-open -a Docker
-
-# Or start Docker service on Linux
-sudo systemctl start docker
-```
-
-#### Java Version Issues
-```bash
-# Check Java version
-java -version
-
-# Install Java 11 or higher
-# On macOS: brew install openjdk@11
-# On Ubuntu: sudo apt install openjdk-11-jdk
-```
-
-#### Node.js/npm Issues
-```bash
-# Check versions
-node --version
-npm --version
-
-# Update if needed
-npm install -g npm@latest
-
-# Or use nvm to manage Node versions
-nvm install 18
-nvm use 18
-```
-
-### Log Analysis
-```bash
-# View all logs in real-time
 ./orchestrator.sh logs all
+```
 
-# Check specific service logs
+**Specific Service:**
+```bash
 ./orchestrator.sh logs backend
 ./orchestrator.sh logs frontend
-
-# View orchestrator logs for system issues
-tail -f logs/orchestrator.log
 ```
 
-### Getting Help
+**Log Files Location:**
+- Backend build: `logs/backend-build.log`
+- Backend runtime: `logs/backend-runtime.log`  
+- Frontend: `logs/frontend-runtime.log`
+- System: `logs/orchestrator.log`
+
+## Development Modes
+
+The system automatically detects and switches between two modes:
+
+### Docker Mode
+**When**: Docker Desktop is running
+**Backend Port**: 8081
+**Features**:
+- Isolated containers
+- Production-like environment
+- Automatic database setup
+- Container orchestration
+
+### Direct Mode  
+**When**: Docker is not available
+**Backend Port**: 8080
+**Features**:
+- Direct Maven execution
+- Faster startup
+- Development-friendly
+- System resource usage
+
+## Troubleshooting
+
+**Common Issues and Solutions:**
+
+<details>
+<summary>Port Already in Use</summary>
+
+The system automatically handles port conflicts, but if you encounter issues:
+
 ```bash
-# Built-in help
+# Stop everything and clear all ports
+./orchestrator.sh stop
+
+# Check what's using ports
+lsof -i :3000
+lsof -i :8080
+lsof -i :8081
+```
+</details>
+
+<details>
+<summary>Backend Won't Start</summary>
+
+1. Check if Java is installed: `java -version`
+2. Check if Maven is working: `mvn -version`
+3. View backend logs: `./orchestrator.sh logs backend`
+4. Try Docker mode: Start Docker Desktop and restart
+</details>
+
+<details>
+<summary>Frontend Build Errors</summary>
+
+1. Clear npm cache: `cd frontend && npm cache clean --force`
+2. Delete node_modules: `rm -rf frontend/node_modules`
+3. Restart system: `./orchestrator.sh restart`
+</details>
+
+<details>
+<summary>Dashboard Not Accessible</summary>
+
+1. Check if Python is installed: `python3 --version`
+2. Check port 5001: `lsof -i :5001`
+3. Restart dashboard: `./orchestrator.sh dashboard`
+</details>
+
+**Getting Help:**
+```bash
+# Show all available commands
 ./orchestrator.sh help
 
-# Check service status
+# Check system status
 ./orchestrator.sh status
-
-# Open dashboard for visual monitoring
-./orchestrator.sh dashboard
 ```
 
-## 🔐 Security Considerations
+## Advanced Configuration
 
-### Development Environment
-- All services run on localhost by default
-- Default passwords should be changed for production
-- HTTPS is configured but uses self-signed certificates
-
-### Production Deployment
-- Use environment variables for sensitive data
-- Configure proper SSL certificates
-- Set up database authentication
-- Enable firewall rules
-- Regular security updates
-
-## 🚀 Advanced Features
-
-### Auto-Pull Updates
-The orchestrator can automatically check for and pull updates:
+### Environment Variables
 
 ```bash
-# Enable auto-updates (runs every hour)
-echo "0 * * * * cd /path/to/Repository-Orchestration && ./orchestrator.sh start" | crontab -
+# Disable automatic port cleanup
+export AUTO_KILL_PORTS=false
+./orchestrator.sh start
 
-# Manual update check
-./orchestrator.sh start  # Will pull latest changes automatically
+# Custom ports (modify orchestrator.sh)
+BE_PORT=8082
+FE_PORT=3001
 ```
 
-### Custom Hooks
-Create custom hooks for deployment workflow:
+### Custom Docker Configuration
 
-```bash
-# Pre-start hook
-cat > scripts/pre-start.sh << 'EOF'
-#!/bin/bash
-echo "Running custom pre-start tasks..."
-# Add your custom logic here
-EOF
+Edit `docker-compose.yml` for advanced Docker setups:
+- Custom network configuration
+- Volume mounting
+- Environment variables
+- Service dependencies
 
-chmod +x scripts/pre-start.sh
+### Development Customization
+
+**Backend Configuration:**
+- Modify `backend/src/main/resources/application.properties`
+- Custom Maven profiles
+- Database connection settings
+
+**Frontend Configuration:**  
+- Modify `frontend/package.json`
+- Environment-specific builds
+- Proxy settings
+
+## Contributing
+
+**Development Workflow:**
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test with `./orchestrator.sh`
+5. Submit a pull request
+
+**Repository Structure:**
+```
+.
+├── README.md                 # This file
+├── ARCHITECTURE.md          # System architecture
+├── install.sh              # Installation script
+├── orchestrator.sh          # Main orchestration script
+├── dashboard.py            # Web dashboard
+├── requirements.txt        # Python dependencies
+├── docker-compose.yml      # Docker configuration
+├── backend/               # Spring Boot API
+├── frontend/             # React application
+└── logs/                # Application logs
 ```
 
-### Monitoring & Alerts
-```bash
-# Set up monitoring endpoints
-curl http://localhost:5000/api/status
-curl http://localhost:8080/actuator/health
-curl http://localhost:3000/health
-
-# Integration with monitoring tools
-# Prometheus endpoint: http://localhost:5000/metrics
-# Health checks: http://localhost:5000/api/health
-```
-
-## 🤝 Contributing
-
-### For the Orchestration Repository
-1. Fork this repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes and test them
-4. Commit: `git commit -m 'Add amazing feature'`
-5. Push: `git push origin feature/amazing-feature`
-6. Open a Pull Request
-
-### For Backend/Frontend Changes
-The orchestration repository automatically pulls from:
-- Backend: `https://github.com/FPTU-Capstone-Project/MotorbikeSharingSystem_BE.git`
-- Frontend: `https://github.com/FPTU-Capstone-Project/MotorbikeSharingSystem_FE.git`
-
-Changes in these repositories will be automatically available to all users of the orchestration system.
-
-## 📞 Support
-
-### Getting Help
-1. **Check the logs**: `./orchestrator.sh logs all`
-2. **Run diagnostics**: `./orchestrator.sh status`
-3. **Open web dashboard**: `./orchestrator.sh dashboard`
-4. **Check system requirements**: Script will validate automatically
-
-### Issue Reporting
-- **Orchestration Issues**: Create issue in this repository
-- **Backend Issues**: Report to [MotorbikeSharingSystem_BE](https://github.com/FPTU-Capstone-Project/MotorbikeSharingSystem_BE)
-- **Frontend Issues**: Report to [MotorbikeSharingSystem_FE](https://github.com/FPTU-Capstone-Project/MotorbikeSharingSystem_FE)
-
-### Contact Information
-- **Project Team**: FPTU Capstone Project Team
-- **Organization**: [FPTU-Capstone-Project](https://github.com/FPTU-Capstone-Project)
+**Coding Standards:**
+- Follow existing code style
+- Add comments for complex logic
+- Update documentation for new features
+- Test thoroughly before submitting
 
 ---
 
-## 📄 License
-
-This orchestration repository is part of the FPTU Capstone Project. Please refer to individual component repositories for their specific licenses.
-
----
-
-**🎉 Happy Developing! 🚀**
-
-*This orchestration system is designed to make your development workflow smooth and your deployments reliable. Whether you're a developer working on features or a stakeholder reviewing the latest changes, everything you need is just one command away!*
+**System Status:** Production Ready  
+**Last Updated:** September 2025  
+**Supported Platforms:** macOS, Linux, Windows (WSL)

@@ -17,7 +17,7 @@ from pathlib import Path
 app = Flask(__name__)
 
 # Configuration
-BE_PORT = 8080
+BE_PORT = 8081  # Default, may be 8080 in fallback mode
 FE_PORT = 3000
 LOG_DIR = "logs"
 BE_REPO = "https://github.com/FPTU-Capstone-Project/MotorbikeSharingSystem_BE.git"
@@ -41,14 +41,26 @@ def run_command(command):
 
 def check_service_status():
     """Check if services are running"""
+    # Smart detect backend port (8081 Docker mode or 8080 fallback mode)
+    backend_port = BE_PORT
     be_status = run_command(f"lsof -Pi :{BE_PORT} -sTCP:LISTEN -t")
+    
+    # If 8081 not found, try 8080 (fallback mode)
+    if not (be_status['success'] and bool(be_status['output'].strip())):
+        fallback_port = 8080
+        be_fallback_status = run_command(f"lsof -Pi :{fallback_port} -sTCP:LISTEN -t")
+        if be_fallback_status['success'] and bool(be_fallback_status['output'].strip()):
+            backend_port = fallback_port
+            be_status = be_fallback_status
+    
     fe_status = run_command(f"lsof -Pi :{FE_PORT} -sTCP:LISTEN -t")
     
     return {
         'backend': {
             'running': be_status['success'] and bool(be_status['output'].strip()),
-            'port': BE_PORT,
-            'url': f'http://localhost:{BE_PORT}'
+            'port': backend_port,
+            'url': f'http://localhost:{backend_port}',
+            'swagger_url': f'http://localhost:{backend_port}/swagger-ui.html'
         },
         'frontend': {
             'running': fe_status['success'] and bool(fe_status['output'].strip()),
@@ -165,6 +177,12 @@ DASHBOARD_HTML = """
         .btn-danger:hover { background: #d32f2f; }
         .btn-success { background: #4CAF50; }
         .btn-success:hover { background: #388E3C; }
+        .swagger-link { 
+            background: #FF9800; color: white; text-decoration: none; 
+            padding: 4px 8px; border-radius: 3px; font-size: 12px;
+            margin-left: 8px; display: inline-block;
+        }
+        .swagger-link:hover { background: #F57C00; color: white; }
         .logs { 
             background: #1e1e1e; color: #f0f0f0; padding: 15px; 
             border-radius: 5px; max-height: 300px; overflow-y: auto;
@@ -254,12 +272,19 @@ DASHBOARD_HTML = """
             for (const [service, info] of Object.entries(status.services)) {
                 const indicator = info.running ? 'status-running' : 'status-stopped';
                 const statusText = info.running ? 'Running' : 'Stopped';
+                let links = '';
+                if (info.running) {
+                    links += `<a href="${info.url}" target="_blank" title="Open ${service}">🔗</a>`;
+                    if (service === 'backend' && info.swagger_url) {
+                        links += ` <a href="${info.swagger_url}" target="_blank" class="swagger-link" title="API Documentation">📖 Swagger</a>`;
+                    }
+                }
                 html += `
                     <div style="margin: 10px 0;">
                         <span class="status-indicator ${indicator}"></span>
                         <strong>${service.charAt(0).toUpperCase() + service.slice(1)}:</strong> 
                         ${statusText} (Port ${info.port})
-                        ${info.running ? `<a href="${info.url}" target="_blank">🔗</a>` : ''}
+                        ${links}
                     </div>
                 `;
             }
@@ -318,7 +343,7 @@ DASHBOARD_HTML = """
         function openService(service) {
             const urls = {
                 frontend: `http://localhost:${3000}`,
-                backend: `http://localhost:${8080}`
+                backend: `http://localhost:${8081}`
             };
             window.open(urls[service], '_blank');
         }
@@ -386,11 +411,11 @@ def api_pull():
 def open_browser():
     """Open browser after server starts"""
     time.sleep(1.5)
-    webbrowser.open('http://localhost:5000')
+    webbrowser.open('http://localhost:5001')
 
 if __name__ == '__main__':
     print("🚀 Starting Motorbike Sharing System Dashboard...")
-    print("📊 Dashboard will be available at: http://localhost:5000")
+    print("📊 Dashboard will be available at: http://localhost:5001")
     
     # Create logs directory if it doesn't exist
     os.makedirs(LOG_DIR, exist_ok=True)
@@ -399,4 +424,4 @@ if __name__ == '__main__':
     threading.Thread(target=open_browser).start()
     
     # Start Flask app
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host='0.0.0.0', port=5001, debug=False)
