@@ -305,10 +305,12 @@ The system will automatically check and install these requirements:
 ```
 
 This will stop:
-- All running services
-- Docker containers (if running)
-- Development processes
+- All project-related services
+- Docker containers (but NOT Docker Engine itself)
+- Development processes (Maven, npm, etc.)
 - Clear occupied ports
+
+**Note:** Docker Desktop/Engine remains running - only project containers are stopped.
 
 **Check Status:**
 ```bash

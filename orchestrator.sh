@@ -569,9 +569,9 @@ stop_services() {
         fi
     done
     
-    # Kill remaining development processes
-    if pkill -f "npm" 2>/dev/null; then ((cleaned_count++)); fi
-    if pkill -f "node" 2>/dev/null; then ((cleaned_count++)); fi
+    # Kill remaining development processes (be more specific to avoid Docker)
+    if pkill -f "npm.*start" 2>/dev/null; then ((cleaned_count++)); fi
+    if pkill -f "node.*frontend" 2>/dev/null; then ((cleaned_count++)); fi
     if pkill -f "vite" 2>/dev/null; then ((cleaned_count++)); fi
     if pkill -f "webpack" 2>/dev/null; then ((cleaned_count++)); fi
     
