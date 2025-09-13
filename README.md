@@ -92,19 +92,13 @@ git clone https://github.com/FPTU-Capstone-Project/Repository-Orchestration.git
 cd Repository-Orchestration
 ```
 
-**Step 2: One-Time Setup**
+**Step 2: One-Time Setup and Auto-Start**
 ```bash
-# Run this only once to install everything needed
+# Run this only once - it installs everything AND starts the system
 ./install.sh
 ```
 
-**Step 3: Start the System**
-```bash
-# Run this every time you want to use the application
-./orchestrator.sh
-```
-
-**Step 4: Use the Application**
+**Step 3: Use the Application**
 - Open your web browser
 - Go to: `http://localhost:3000` (this is your main app)
 - The system runs automatically in the background
@@ -115,10 +109,16 @@ cd Repository-Orchestration
 - At the end: Clear instructions with web links
 - In your browser: The Motorbike Sharing application interface
 
-**Step 5: Stop When Done**
+**Step 4: Stop When Done**
 ```bash
 # Run this when you're finished
 ./orchestrator.sh stop
+```
+
+**Next Time Usage:**
+```bash
+# For subsequent runs (after initial setup), just use:
+./orchestrator.sh
 ```
 
 **How to Open Terminal/Command Line:**
@@ -199,6 +199,7 @@ For detailed system architecture, flow diagrams, and technical documentation, se
   - Port conflict resolution
   - Dependency management
   - Error handling and recovery
+  - Automatic system updates
 
 ## Installation Guide
 
@@ -283,6 +284,20 @@ This will stop:
 ```bash
 ./orchestrator.sh status
 ```
+
+### Updating the System
+
+**Get Latest Updates:**
+```bash
+./orchestrator.sh update
+```
+
+This will:
+- Update the orchestration system itself (this repository)
+- Pull latest changes from backend and frontend repositories
+- Keep all your local data intact
+
+**Note:** The system also automatically checks for orchestration updates when you run `./orchestrator.sh start`
 
 ### Using the Dashboard
 

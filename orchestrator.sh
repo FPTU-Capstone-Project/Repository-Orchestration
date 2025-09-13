@@ -239,6 +239,55 @@ check_system_requirements() {
     success "All system requirements met!"
 }
 
+# Update orchestration repository (this repository)
+update_orchestration_repo() {
+    log "Checking for updates to orchestration system..."
+    
+    # Check if we're in a git repository
+    if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        warning "Not in a git repository. Skipping orchestration update."
+        return
+    fi
+    
+    # Get current branch
+    current_branch=$(git rev-parse --abbrev-ref HEAD)
+    if [ "$current_branch" = "HEAD" ]; then
+        warning "Detached HEAD state. Skipping orchestration update."
+        return
+    fi
+    
+    # Fetch latest changes
+    if ! git fetch origin 2>/dev/null; then
+        warning "Failed to fetch orchestration updates. Continuing with current version."
+        return
+    fi
+    
+    # Check if update is available
+    local_commit=$(git rev-parse HEAD)
+    remote_commit=$(git rev-parse "origin/$current_branch" 2>/dev/null)
+    
+    if [ "$local_commit" != "$remote_commit" ] && [ -n "$remote_commit" ]; then
+        log "New orchestration updates available. Updating..."
+        
+        # Check for local changes
+        if ! git diff-index --quiet HEAD --; then
+            warning "Local changes detected in orchestration. Stashing changes..."
+            git stash push -m "Auto-stash before orchestration update $(date)"
+        fi
+        
+        # Pull updates
+        if git pull origin "$current_branch"; then
+            success "Orchestration system updated successfully!"
+            log "Please restart the orchestrator to use the latest version."
+            sleep 2
+        else
+            error "Failed to update orchestration system. Continuing with current version."
+        fi
+    else
+        log "Orchestration system is already up to date"
+    fi
+}
+
 # Clone or update repository
 clone_or_update_repo() {
     local repo_url=$1
@@ -575,6 +624,9 @@ check_status() {
 start_orchestration() {
     log "Starting Motorbike Sharing System orchestration..."
     
+    # First update orchestration system itself
+    update_orchestration_repo
+    
     check_system_requirements
     
     clone_or_update_repo $BE_REPO $BE_DIR
@@ -610,6 +662,13 @@ case "${1:-start}" in
         stop_all_services
         sleep 3
         start_orchestration
+        ;;
+    "update")
+        log "Updating orchestration system and repositories..."
+        update_orchestration_repo
+        clone_or_update_repo $BE_REPO $BE_DIR
+        clone_or_update_repo $FE_REPO $FE_DIR
+        success "All repositories updated successfully!"
         ;;
     "dashboard")
         if command -v python3 &> /dev/null; then
@@ -679,6 +738,7 @@ case "${1:-start}" in
         echo "  clean         - Alias for 'stop' (backward compatibility)"
         echo "  restart       - Restart all services"
         echo "  clean-restart - Alias for 'restart' (backward compatibility)"
+        echo "  update        - Update orchestration system and all repositories"
         echo "  status        - Check service status"
         echo "  dashboard     - Open web dashboard"
         echo "  logs          - View logs [backend|frontend|all]"
