@@ -73,10 +73,84 @@ That's it! The system will automatically handle everything else.
 
 ### For Non-Technical Users
 
-1. **Installation**: Double-click or run `./install.sh` once
-2. **Start**: Run `./orchestrator.sh` whenever you want to use the system
-3. **Access**: Open your web browser to `http://localhost:3000`
-4. **Stop**: Run `./orchestrator.sh stop` when finished
+**What This System Does:**
+This is a complete motorbike sharing application (like bike-sharing but for motorbikes). It includes:
+- A website where users can rent motorbikes
+- A backend system that manages all the data
+- Everything runs on your computer for development/testing
+
+**Step 1: Get the Code**
+```bash
+# Open Terminal (macOS) or Command Prompt (Windows)
+# Navigate to where you want the project (like Desktop)
+cd Desktop
+
+# Download the project
+git clone https://github.com/FPTU-Capstone-Project/Repository-Orchestration.git
+
+# Enter the project folder
+cd Repository-Orchestration
+```
+
+**Step 2: One-Time Setup**
+```bash
+# Run this only once to install everything needed
+./install.sh
+```
+
+**Step 3: Start the System**
+```bash
+# Run this every time you want to use the application
+./orchestrator.sh
+```
+
+**Step 4: Use the Application**
+- Open your web browser
+- Go to: `http://localhost:3000` (this is your main app)
+- The system runs automatically in the background
+
+**What You'll See:**
+- When starting: Lots of text downloading and installing things (this is normal!)
+- Success messages like "Frontend is ready!" and "Backend is ready!"
+- At the end: Clear instructions with web links
+- In your browser: The Motorbike Sharing application interface
+
+**Step 5: Stop When Done**
+```bash
+# Run this when you're finished
+./orchestrator.sh stop
+```
+
+**How to Open Terminal/Command Line:**
+
+<details>
+<summary>Windows Users</summary>
+
+1. Press `Windows Key + R`
+2. Type `cmd` and press Enter
+3. A black window opens - this is your command prompt
+</details>
+
+<details>
+<summary>Mac Users</summary>
+
+1. Press `Cmd + Space` to open Spotlight
+2. Type `Terminal` and press Enter
+3. A window opens - this is your terminal
+</details>
+
+<details>
+<summary>If Git is Not Installed</summary>
+
+**Windows:**
+- Download Git from: https://git-scm.com/download/win
+- Install it with default settings
+- Restart Command Prompt
+
+**Mac:**
+- Git usually comes pre-installed
+- If not, install Xcode Command Line Tools: `xcode-select --install`
+</details>
 
 ## System Architecture
 
@@ -270,6 +344,73 @@ The system automatically detects and switches between two modes:
 - System resource usage
 
 ## Troubleshooting
+
+**For Non-Technical Users:**
+
+<details>
+<summary>I Can't Find Terminal/Command Prompt</summary>
+
+**Windows:**
+1. Click the Start button
+2. Type "cmd" or "Command Prompt"
+3. Click on the result that appears
+4. A black window should open
+
+**Mac:**
+1. Press and hold the `Command` key and press `Space`
+2. Type "Terminal"
+3. Press Enter
+4. A window with white or black background should open
+</details>
+
+<details>
+<summary>I Get "Command Not Found" or "Git Not Recognized"</summary>
+
+This means Git is not installed on your computer.
+
+**Windows:**
+1. Go to https://git-scm.com/download/win
+2. Download and install Git with all default options
+3. Close and reopen Command Prompt
+4. Try the commands again
+
+**Mac:**
+1. Run this in Terminal: `xcode-select --install`
+2. A popup will appear - click "Install"
+3. Wait for it to finish
+4. Try the commands again
+</details>
+
+<details>
+<summary>The Website Won't Open (localhost:3000)</summary>
+
+1. Make sure you ran `./orchestrator.sh` first
+2. Wait 2-3 minutes for everything to start
+3. Try refreshing your browser
+4. If still not working, run `./orchestrator.sh status` to check
+</details>
+
+<details>
+<summary>I See Lots of Red Text/Errors</summary>
+
+This is usually normal during the first setup. The system installs many things automatically.
+
+1. Wait for the process to complete
+2. If it stops and asks for input, just press Enter
+3. If you see "SUCCESS" or "ready" messages, everything is working
+4. Try accessing the website at `http://localhost:3000`
+</details>
+
+<details>
+<summary>Everything Looks Frozen/Stuck</summary>
+
+1. Wait 5-10 minutes (first setup takes time)
+2. If nothing happens, press `Ctrl+C` to stop
+3. Run `./orchestrator.sh stop` to clean up
+4. Try `./orchestrator.sh` again
+</details>
+
+**For Technical Users:**
 
 **Common Issues and Solutions:**
 
