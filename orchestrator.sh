@@ -370,9 +370,19 @@ setup_backend() {
         log "No dev.sh found - using standard Maven commands..."
         mvn clean install -DskipTests > "../$LOG_DIR/backend-build.log" 2>&1
         success "Backend build completed"
-        
-        log "Starting backend server..."
-        nohup mvn spring-boot:run > "../$LOG_DIR/backend-runtime.log" 2>&1 &
+
+        log "Starting backend server with DevTools support..."
+        # Use wrapper subshell to handle DevTools auto-restart gracefully
+        (
+            trap 'kill -TERM $MAVEN_PID 2>/dev/null; exit 0' SIGTERM SIGINT
+            mvn spring-boot:run >> "../$LOG_DIR/backend-runtime.log" 2>&1 &
+            MAVEN_PID=$!
+            echo $MAVEN_PID > "/tmp/orchestrator-backend.pid"
+            wait $MAVEN_PID
+        ) &
+
+        # Store wrapper process PID for later cleanup
+        echo $! > "/tmp/orchestrator-backend-wrapper.pid"
         BE_PORT=8080
     fi
     
@@ -547,16 +557,27 @@ stop_services() {
     # 2. Stop development processes on specific ports
     echo -n -e "${BLUE}🔧 Development processes:${NC} "
     local stopped_count=0
-    
-    # Kill processes on project ports
+
+    # Stop backend wrapper gracefully first (allows DevTools cleanup)
+    if [ -f "/tmp/orchestrator-backend-wrapper.pid" ]; then
+        local wrapper_pid=$(cat /tmp/orchestrator-backend-wrapper.pid 2>/dev/null || echo "")
+        if [ -n "$wrapper_pid" ] && ps -p $wrapper_pid > /dev/null 2>&1; then
+            kill -TERM $wrapper_pid 2>/dev/null || true
+            sleep 2
+            ((stopped_count++))
+        fi
+        rm -f /tmp/orchestrator-backend-wrapper.pid /tmp/orchestrator-backend.pid
+    fi
+
+    # Kill processes on project ports (fallback)
     for port in $BE_PORT $FE_PORT 5001; do
         if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
             kill $(lsof -Pi :$port -sTCP:LISTEN -t) 2>/dev/null || true
             ((stopped_count++))
         fi
     done
-    
-    # Kill specific development processes
+
+    # Kill specific development processes (fallback)
     if pkill -f "mvn spring-boot:run" 2>/dev/null; then ((stopped_count++)); fi
     if pkill -f "npm start" 2>/dev/null; then ((stopped_count++)); fi
     
