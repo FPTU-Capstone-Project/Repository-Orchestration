@@ -17,7 +17,7 @@ BE_REPO="https://github.com/FPTU-Capstone-Project/MotorbikeSharingSystem_BE.git"
 FE_REPO="https://github.com/FPTU-Capstone-Project/MotorbikeSharingSystem_FE.git"
 BE_DIR="backend"
 FE_DIR="frontend"
-BE_PORT=8081
+BE_PORT=8080
 FE_PORT=3000
 LOG_DIR="logs"
 
@@ -337,6 +337,20 @@ clone_or_update_repo() {
 # Install dependencies and build backend
 setup_backend() {
     log "Setting up backend..."
+    
+    # Force kill any process on port 8080 before starting backend
+    # This ensures backend can start cleanly even if previous instance didn't shutdown properly
+    if lsof -Pi :8080 -sTCP:LISTEN -t >/dev/null 2>&1; then
+        warning "Port 8080 is occupied. Cleaning up before starting backend..."
+        local pids=$(lsof -Pi :8080 -sTCP:LISTEN -t)
+        for pid in $pids; do
+            log "Killing process $pid on port 8080"
+            kill -9 $pid 2>/dev/null || true
+        done
+        sleep 2
+        success "Port 8080 cleared for backend"
+    fi
+    
     cd $BE_DIR
     
     # Check if dev.sh exists and Docker is available

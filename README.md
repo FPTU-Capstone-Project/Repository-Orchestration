@@ -378,6 +378,34 @@ This system is designed for **Docker-only local development**:
 **For Non-Technical Users:**
 
 <details>
+<summary>Backend Won't Start - Port 8080 Already in Use</summary>
+
+**Error message:** "Web server failed to start. Port 8080 was already in use."
+
+**Quick Fix:**
+```bash
+./kill-backend-port.sh
+```
+
+**What this does:**
+- Automatically finds and stops any process using port 8080
+- Clears the port so backend can start fresh
+- Safe to run - won't affect other services
+
+**Then restart:**
+```bash
+./orchestrator.sh
+```
+
+**Why this happens:**
+- Previous backend instance didn't shutdown cleanly
+- Another Java process is still running
+- System crash left process hanging
+
+**Note:** The orchestrator now automatically clears port 8080 before starting backend!
+</details>
+
+<details>
 <summary>The ONE-COMMAND Setup Failed</summary>
 
 **Most common issues:**
