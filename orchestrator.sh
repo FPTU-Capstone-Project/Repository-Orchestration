@@ -413,7 +413,7 @@ setup_frontend() {
     if [ -f "package.json" ]; then
         if [ ! -d "node_modules" ] || [ "package.json" -nt "node_modules" ]; then
             log "Installing frontend dependencies..."
-            npm install > "../$LOG_DIR/frontend-install.log" 2>&1
+            npm install --legacy-peer-deps > "../$LOG_DIR/frontend-install.log" 2>&1
             success "Frontend dependencies installed"
         else
             log "Frontend dependencies already installed and up to date"

@@ -1,0 +1,196 @@
+name: Deploy Backend to EC2
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  DOCKER_IMAGE: khoatdse172986/motorbike-backend
+  CONTAINER_NAME: motorbike-backend
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy to AWS EC2
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Create Firebase credentials file
+        working-directory: ./backend
+        run: |
+          mkdir -p src/main/resources
+          echo '${{ secrets.FIREBASE_CREDENTIALS }}' > src/main/resources/mssus-fcm-firebase-adminsdk-fbsvc-938443350c.json
+          echo "✓ Firebase credentials file created"
+          ls -lh src/main/resources/*.json || echo "Warning: JSON file not found"
+        
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+          cache: 'maven'
+      
+      - name: Build with Maven
+        working-directory: ./backend
+        run: |
+          echo "Building Spring Boot application..."
+          mvn clean package -DskipTests
+          echo "Build completed successfully"
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: Extract metadata
+        id: meta
+        run: |
+          echo "timestamp=$(date +%Y%m%d-%H%M%S)" >> $GITHUB_OUTPUT
+          echo "sha_short=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
+      
+      - name: Build and push multi-platform Docker image
+        working-directory: ./backend
+        run: |
+          echo "Building multi-platform Docker image (AMD64 + ARM64)..."
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            --push \
+            -t ${{ env.DOCKER_IMAGE }}:latest \
+            -t ${{ env.DOCKER_IMAGE }}:${{ steps.meta.outputs.timestamp }} \
+            -t ${{ env.DOCKER_IMAGE }}:${{ steps.meta.outputs.sha_short }} \
+            -f Dockerfile .
+          
+          echo "Multi-platform images pushed successfully:"
+          echo "  - ${{ env.DOCKER_IMAGE }}:latest (amd64, arm64)"
+          echo "  - ${{ env.DOCKER_IMAGE }}:${{ steps.meta.outputs.timestamp }} (amd64, arm64)"
+          echo "  - ${{ env.DOCKER_IMAGE }}:${{ steps.meta.outputs.sha_short }} (amd64, arm64)"
+      
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo "=========================================="
+            echo "Starting deployment on EC2..."
+            echo "=========================================="
+            
+            # Pull latest image
+            echo "Pulling latest Docker image..."
+            docker pull ${{ env.DOCKER_IMAGE }}:latest
+            
+            # Stop existing container
+            echo "Stopping existing container..."
+            docker stop ${{ env.CONTAINER_NAME }} 2>/dev/null || true
+            docker rm ${{ env.CONTAINER_NAME }} 2>/dev/null || true
+            
+            # Start new container with host network and volume mount
+            echo "Starting new container..."
+            docker run -d \
+              --name ${{ env.CONTAINER_NAME }} \
+              --restart unless-stopped \
+              --network host \
+              -v /etc/secrets:/etc/secrets:ro \
+              -e SPRING_DATASOURCE_URL='${{ secrets.SPRING_DATASOURCE_URL }}' \
+              -e SPRING_DATASOURCE_USERNAME='${{ secrets.SPRING_DATASOURCE_USERNAME }}' \
+              -e SPRING_DATASOURCE_PASSWORD='${{ secrets.SPRING_DATASOURCE_PASSWORD }}' \
+              -e SPRING_DATA_REDIS_HOST='${{ secrets.SPRING_DATA_REDIS_HOST }}' \
+              -e SPRING_DATA_REDIS_PORT='${{ secrets.SPRING_DATA_REDIS_PORT }}' \
+              -e SPRING_DATA_REDIS_PASSWORD='${{ secrets.SPRING_DATA_REDIS_PASSWORD }}' \
+              -e SPRING_DATA_REDIS_SSL_ENABLED='${{ secrets.SPRING_DATA_REDIS_SSL_ENABLED }}' \
+              -e SPRING_RABBITMQ_HOST='${{ secrets.SPRING_RABBITMQ_HOST }}' \
+              -e SPRING_RABBITMQ_PORT='${{ secrets.SPRING_RABBITMQ_PORT }}' \
+              -e SPRING_RABBITMQ_USERNAME='${{ secrets.SPRING_RABBITMQ_USERNAME }}' \
+              -e SPRING_RABBITMQ_PASSWORD='${{ secrets.SPRING_RABBITMQ_PASSWORD }}' \
+              -e SPRING_RABBITMQ_VIRTUAL_HOST='${{ secrets.SPRING_RABBITMQ_VIRTUAL_HOST }}' \
+              -e CLOUDINARY_CLOUD_NAME='${{ secrets.CLOUDINARY_CLOUD_NAME }}' \
+              -e CLOUDINARY_API_KEY='${{ secrets.CLOUDINARY_API_KEY }}' \
+              -e CLOUDINARY_API_SECRET='${{ secrets.CLOUDINARY_API_SECRET }}' \
+              -e TWILIO_ACCOUNT_SID='${{ secrets.TWILIO_ACCOUNT_SID }}' \
+              -e TWILIO_AUTH_TOKEN='${{ secrets.TWILIO_AUTH_TOKEN }}' \
+              -e TWILIO_PHONE_NUMBER='${{ secrets.TWILIO_PHONE_NUMBER }}' \
+              -e PAYOS_CLIENT_ID='${{ secrets.PAYOS_CLIENT_ID }}' \
+              -e PAYOS_API_KEY='${{ secrets.PAYOS_API_KEY }}' \
+              -e PAYOS_CHECKSUM_KEY='${{ secrets.PAYOS_CHECKSUM_KEY }}' \
+              -e FPT_API_KEY='${{ secrets.FPT_API_KEY }}' \
+              ${{ env.DOCKER_IMAGE }}:latest
+            
+            # Wait for container to start
+            echo "Waiting for application to start..."
+            sleep 30
+            
+            # Check container status
+            if docker ps | grep -q ${{ env.CONTAINER_NAME }}; then
+              echo "Container started successfully"
+              docker ps | grep ${{ env.CONTAINER_NAME }}
+            else
+              echo "ERROR: Container failed to start"
+              echo "Container logs:"
+              docker logs ${{ env.CONTAINER_NAME }}
+              exit 1
+            fi
+            
+            echo "=========================================="
+            echo "Deployment completed successfully!"
+            echo "=========================================="
+      
+      - name: Health Check
+        run: |
+          echo "Performing health check..."
+          max_attempts=30
+          attempt=0
+          
+          while [ $attempt -lt $max_attempts ]; do
+            if curl -f -s http://${{ secrets.EC2_HOST }}/actuator/health > /dev/null 2>&1; then
+              echo "Health check passed!"
+              echo "Application is running successfully"
+              curl -s http://${{ secrets.EC2_HOST }}/actuator/health
+              exit 0
+            fi
+            
+            echo "Attempt $((attempt + 1))/$max_attempts: Waiting for application..."
+            sleep 10
+            attempt=$((attempt + 1))
+          done
+          
+          echo "WARNING: Health check did not pass, but application may still be starting"
+          echo "Check status at: http://${{ secrets.EC2_HOST }}/actuator/health"
+      
+      - name: Cleanup old Docker images
+        uses: appleboy/ssh-action@v1.0.0
+        if: success()
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo "Cleaning up old Docker images..."
+            # Keep only the 3 most recent images
+            docker images ${{ env.DOCKER_IMAGE }} --format "{{.ID}}" | tail -n +4 | xargs -r docker rmi -f || true
+            echo "Cleanup completed"
+      
+      - name: Deployment Summary
+        if: always()
+        run: |
+          echo "=========================================="
+          echo "DEPLOYMENT SUMMARY"
+          echo "=========================================="
+          echo "Status: ${{ job.status }}"
+          echo "Image: ${{ env.DOCKER_IMAGE }}:${{ steps.meta.outputs.timestamp }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Triggered by: ${{ github.actor }}"
+          echo ""
+          echo "Application URL: http://13.215.143.121/api/v1"
+          echo "Swagger UI: http://13.215.143.121/swagger-ui.html"
+          echo "Health Check: http://13.215.143.121/actuator/health"
+          echo "=========================================="
